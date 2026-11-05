@@ -96,7 +96,7 @@ export default function Home() {
         setError(err.message);
       }
     }
-    
+
     finally{
       setLoading(false);
     }
@@ -214,7 +214,7 @@ export default function Home() {
             <ul className="grid gap-2">
               <li className="mb-2 flex items-center gap-2 text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
                 <div className="flex items-center gap-2">
-                  <WeatherIcon /> <span>Weather Data</span>
+                  <WeatherIcon temperature={weather.temperature} /> <span>Weather Data</span>
                 </div>
               </li>
               <li className="flex flex-row items-center gap-2 rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600 sm:text-base">
