@@ -35,7 +35,7 @@ export default function Home() {
   const [cityData, setCityData] = useState<CityData | null>(null);
   const [weather, setWeather] = useState<weatherData | null>(null);
   const [isLoading, setLoading] = useState<boolean>(false);
-  const [Error, setError] = useState<string | null>(null);
+  const [errorSignal, setError] = useState<string | null>(null);
 
   function UpdateInput(event: React.ChangeEvent<HTMLInputElement>) {
     setCity(event.target.value.trim());
@@ -51,18 +51,20 @@ export default function Home() {
     if (!city) {
       setError("Please enter a city name.");
       return;
-    } else {
+    } 
+    
+    try {
       setLoading(true);
       const response = await fetch(
         `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}`,
       );
-      if (response.status !== 200) {
-        setError(
-          `Failed to fetch data: ${response.status} ${response.statusText}`,
-        );
+      if (!response.ok) {
+        throw new Error("Failed to fetch data, try again");
       }
+
       console.log("Response status:", response.status);
       const data = await response.json();
+
       if (data && data.results && data.results.length > 0) {
         const dataResults = data.results[0];
         setCityData(dataResults);
@@ -73,7 +75,7 @@ export default function Home() {
           `https://api.open-meteo.com/v1/forecast?latitude=${dataResults.latitude}&longitude=${dataResults.longitude}&current_weather=true`,
         );
         if (!weatherResponse.ok) {
-          setError("Failed to fetch the weather data");
+          throw new Error("Failed to fetch the weather data, try again");
         } else {
           const weatherResult = await weatherResponse.json();
           setWeather({
@@ -83,8 +85,19 @@ export default function Home() {
           });
         }
       } else {
-        setError("No data found for the specified city.");
+        throw new Error("No data found for the specified city.");
       }
+
+    } catch(err:any){
+
+      if(err.message === "Failed to fetch"){
+        setError("Network error. Please check internet connection.");
+      } else{
+        setError(err.message);
+      }
+    }
+    
+    finally{
       setLoading(false);
     }
   }
@@ -119,9 +132,9 @@ export default function Home() {
         </div>
       </div>
       <main className="mx-auto grid w-full max-w-6xl flex-1 grid-cols-1 content-start gap-5 px-4 py-8 sm:grid-cols-2 sm:px-6 sm:py-10 lg:px-8">
-        {Error && (
+        {errorSignal && (
           <div className="col-span-full mx-auto w-full max-w-5xl rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-center text-sm font-medium text-rose-700 shadow-sm sm:text-base">
-            {Error}
+            {errorSignal}
           </div>
         )}
 
@@ -131,6 +144,7 @@ export default function Home() {
             <p className="text-sm font-medium sm:text-base">Loading...</p>
           </div>
         )}
+
         <div className="col-span-full mx-auto w-full max-w-5xl overflow-hidden rounded-3xl bg-linear-to-br from-indigo-600 via-violet-600 to-cyan-500 px-6 py-10 text-white shadow-xl shadow-indigo-900/15 sm:px-10 sm:py-12">
           <p className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
             Welcome to SkyCast
